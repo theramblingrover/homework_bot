@@ -50,7 +50,7 @@ def get_api_answer(current_timestamp):
     try:
         logger.info('Sending request to API')
         responce = requests.get(ENDPOINT, headers=HEADERS,
-                                params={'from_date': timestamp})
+                                params={'from_date': timestamp}, timeout=90)
     except Exception as error:
         raise Exception(f'API request error: {error}')
     if responce.status_code != HS.OK:
@@ -116,7 +116,7 @@ def main():
                 logger.debug('Homework status unchanged since last check')
         except Exception as error:
             logger.error(error)
-            message = f'Сбой в работе программы: {error}'
+            message = f'Error: {error}'
             if message != error_message:
                 send_message(bot, message)
                 error_message = message
