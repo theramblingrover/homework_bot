@@ -1,8 +1,9 @@
 import logging
 import os
 import sys
+import time
 from http import HTTPStatus as HS
-from time import time, sleep
+
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -45,7 +46,7 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Requests data from API."""
-    timestamp = current_timestamp or time().__int__()
+    timestamp = current_timestamp
     try:
         logger.info('Sending request to API')
         responce = requests.get(ENDPOINT, headers=HEADERS,
@@ -90,13 +91,13 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Returns False if at last one token is not found."""
+    """Returns False if at least one token is not found."""
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
     """Основная логика работы бота."""
-    current_timestamp = time().__int__()
+    current_timestamp = time.time().__int__()
     status_message = ''
     error_message = ''
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
@@ -120,7 +121,7 @@ def main():
                 send_message(bot, message)
                 error_message = message
         finally:
-            sleep(RETRY_PERIOD)
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
