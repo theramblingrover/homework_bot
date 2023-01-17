@@ -23,15 +23,11 @@ HOMEWORK_VERDICTS: dict = {
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
-LOG_FILE = 'homework.log'
-LOG_LEVEL = logging.DEBUG
-LOG_FORMAT = ('%(asctime)s, %(levelname)s, %(message)s, %(funcName)s, '
-              '%(lineno)s')
 
-handler_stdio = logging.StreamHandler(stream=sys.stdout)
-handler_file = logging.FileHandler(LOG_FILE)
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT,
-                    handlers=[handler_file, handler_stdio])
+logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s, %(levelname)s, '
+                    '%(message)s, %(funcName)s, %(lineno)s'),
+                    handlers=[logging.FileHandler('homework.log'),
+                              logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger(__name__)
 
 
@@ -40,10 +36,11 @@ def send_message(bot: telegram.Bot, message: str) -> None:
     logger.info('Trying to send message')
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.debug(f'Message sent successfully: {message}')
     except telegram.error.TelegramError:
         logger.error(f'Failed to send message: {message}')
-        raise exceptions.SilentError
+    else:
+        logger.debug(f'Message sent successfully: {message}')
+
 
 
 def get_api_answer(timestamp: int) -> str:
@@ -52,14 +49,13 @@ def get_api_answer(timestamp: int) -> str:
         logger.info('Sending request to API')
         params = {'from_date': timestamp}
         responce = requests.get(ENDPOINT, params, headers=HEADERS, timeout=90)
-        logger.info(f'Request parameters: {ENDPOINT}, {HEADERS}, {params},'
-                    f' {responce.status_code}, {responce.text},'
-                    f' {responce.reason} ')
         if responce.status_code != HS.OK:
+            logger.error(f'Request parameters: {ENDPOINT}, {HEADERS}, '
+                         f'{params}, {responce.status_code}, {responce.text},'
+                        f' {responce.reason} ')
             raise exceptions.InfoError(f'HTTP error {responce.status_code}')
         return responce.json()
     except Exception as error:
-        logger.error(f'Error on API answer: {error}')
         raise exceptions.InfoError(f'API request error: {error}')
 
 
@@ -98,8 +94,8 @@ def check_tokens() -> None:
 def main() -> None:
     """Основная логика работы бота."""
     current_timestamp = int(time.time())
-    status_message = ''
-    error_message = ''
+    last_status_message = ''
+    last_error_message = ''
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     if not check_tokens():
         logger.critical('No tokens found.')
@@ -109,26 +105,28 @@ def main() -> None:
             response = get_api_answer(current_timestamp)
             current_timestamp = response.get('current_date')
             homeworks_list = check_response(response)
-            try:
-                message = parse_status(homeworks_list[0])
-            except IndexError:
-                message = 'Не найдено работ на проверке'
-            if message != status_message:
-                send_message(bot, message)
-                status_message = message
+            if homeworks_list != []:
+                status_message = parse_status(homeworks_list[0])
+            else:
+                status_message = 'Не найдено работ на проверке'
+            if status_message != last_status_message:
+                send_message(bot, status_message)
+                last_status_message = status_message
             else:
                 logger.debug('Homework status unchanged since last check')
         except exceptions.SilentError as error:
             logger.error(f'Error occured: {error}')
         except (exceptions.InfoError, TypeError) as error:
             logger.error(f'Error occured: {error}. Error message sent to chat')
-            message = f'Произошла ошибка: {error}'
-            if message != error_message:
-                send_message(bot, message)
-                error_message = message
+            error_message = f'Произошла ошибка: {error}'
+            if error_message != last_error_message:
+                send_message(bot, error_message)
+                last_error_message = error_message
         finally:
             time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
     main()
+
+# Как тебя в Пачке найти? Куратор этот мой вопрос игнорит.
