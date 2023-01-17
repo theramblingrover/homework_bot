@@ -35,7 +35,6 @@ logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT,
 logger = logging.getLogger(__name__)
 
 
-
 def send_message(bot: telegram.Bot, message: str) -> None:
     """Sends a message to chat."""
     logger.info('Trying to send message')
@@ -57,7 +56,7 @@ def get_api_answer(timestamp: int) -> str:
                     f' {responce.status_code}, {responce.text},'
                     f' {responce.reason} ')
         if responce.status_code != HS.OK:
-            raise exceptions.InfoError (f'HTTP error {responce.status_code}')
+            raise exceptions.InfoError(f'HTTP error {responce.status_code}')
         return responce.json()
     except Exception as error:
         logger.error(f'Error on API answer: {error}')
@@ -66,7 +65,7 @@ def get_api_answer(timestamp: int) -> str:
 
 def check_response(response: dict) -> list:
     """Checks if API returns correct data."""
-    if not isinstance (response, dict):
+    if not isinstance(response, dict):
         raise TypeError('Wrong response format: <dict> expected.')
     if 'homeworks' not in response:
         raise exceptions.InfoError('Keys are not found in response')
@@ -75,6 +74,7 @@ def check_response(response: dict) -> list:
     if not isinstance(response['homeworks'], list):
         raise TypeError('Wrong response format: <list> expected.')
     return response['homeworks']
+
 
 def parse_status(homework: dict) -> str:
     """Gets homework status from homework dict."""
