@@ -42,7 +42,6 @@ def send_message(bot: telegram.Bot, message: str) -> None:
         logger.debug(f'Message sent successfully: {message}')
 
 
-
 def get_api_answer(timestamp: int) -> str:
     """Requests data from API."""
     try:
@@ -52,7 +51,7 @@ def get_api_answer(timestamp: int) -> str:
         if responce.status_code != HS.OK:
             logger.error(f'Request parameters: {ENDPOINT}, {HEADERS}, '
                          f'{params}, {responce.status_code}, {responce.text},'
-                        f' {responce.reason} ')
+                         f' {responce.reason} ')
             raise exceptions.InfoError(f'HTTP error {responce.status_code}')
         return responce.json()
     except Exception as error:
