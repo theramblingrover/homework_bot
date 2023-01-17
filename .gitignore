@@ -153,3 +153,6 @@ media/
 # версии и упражнения
 old_homework.py
 homework_copy.py
+
+# logs
+*.log
