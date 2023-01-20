@@ -42,17 +42,17 @@ def send_message(bot: telegram.Bot, message: str) -> None:
         logger.debug(f'Message sent successfully: {message}')
 
 
-def get_api_answer(timestamp: int) -> str:
+def get_api_answer(timestamp: int) -> dict:
     """Requests data from API."""
     try:
         logger.info('Sending request to API')
         params = {'from_date': timestamp}
         responce = requests.get(ENDPOINT, params, headers=HEADERS, timeout=90)
         if responce.status_code != HS.OK:
-            logger.error(f'Request parameters: {ENDPOINT}, {HEADERS}, '
-                         f'{params}, {responce.status_code}, {responce.text},'
-                         f' {responce.reason} ')
-            raise exceptions.InfoError(f'HTTP error {responce.status_code}')
+            raise exceptions.InfoError(
+                f'HTTP error {ENDPOINT}, {HEADERS}, {params}, '
+                f'{responce.status_code}, {responce.text}, {responce.reason}'
+            )
         return responce.json()
     except Exception as error:
         raise exceptions.InfoError(f'API request error: {error}')
@@ -85,7 +85,7 @@ def parse_status(homework: dict) -> str:
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
-def check_tokens() -> None:
+def check_tokens() -> bool:
     """Returns False if at least one token is not found."""
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
