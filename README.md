@@ -1,2 +1,2 @@
 # homework_bot
-python telegram bot
+Interacts with Yandex.Practicum Homeworks API and sends homework status to Telegram chat.
